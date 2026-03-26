@@ -1,0 +1,20 @@
+I'm building a data platform for a drone delivery company using Snowflake. Here are my requirements:
+Data Sources (7 raw schemas, 16 tables):
+FLV6: flight_logs, weather_data
+DELIVERY: orders, customers, delivery_feedback
+API: missions, mission_events
+GEO: delivery_zones, no_fly_zones
+OSRM: routes, route_segments
+DEPOT: aircraft, parts_inventory, depots
+RECORDS: maintenance_logs, parts_used
+Requirements:
+RBAC (Phase 1): 4 roles (DRONE_ADMIN, DRONE_ENGINEER, DRONE_ANALYST, DRONE_LOADER) with hierarchy under SYSADMIN. 3 warehouses (DRONE_INGEST_WH XS, DRONE_TRANSFORM_WH S, DRONE_ANALYTICS_WH XS). Future grants on all schemas. Grant SNOWFLAKE.CORTEX_USER to ENGINEER and ANALYST.
+Database & Schemas (Phase 2): DRONE_DELIVERY_DB with 11 schemas — 7 raw (FLV6, DELIVERY, API, GEO, OSRM, DEPOT, RECORDS) + 4 medallion (BRONZE, SILVER, GOLD, ANALYTICS).
+Raw Tables (Phase 3): 16 tables across 7 schemas. All tables have _LOADED_AT and _SOURCE_FILE metadata columns. DELIVERY_FEEDBACK has feedback_id, order_id, customer_id, rating (1-5), comments (TEXT), feedback_channel, created_at.
+Synthetic Data (Phase 4): Stored procedure GENERATE_SYNTHETIC_DATA() generating ~560K+ rows — 5 depots, 50 aircraft, 1K customers, 5K orders, 5K feedback (1 per order), 5K missions, 50K mission events, 500K flight logs, weather matching flight windows, 5K routes, 25K route segments, 200 parts, 500 maintenance logs, 1.5K parts used.
+CDC (Phase 5): 16 Snowflake Streams (one per raw table) placed in BRONZE schema, providing METADATAACTION, METADATAISUPDATE, METADATA$ROW_ID.
+dbt Medallion Architecture (Phase 6): Bronze (16 incremental models with CDC merge + soft deletes), Silver (17+ models with cleaning + AI enrichment), Gold (dims/facts/KPI aggregates, 8+ models). Use generate_schema_name macro for exact schema names.
+AI Functions: Silver layer — AI_CLASSIFY (weather severity, event categories, feedback categories), AI_SENTIMENT (mission notes, feedback comments, maintenance urgency), AI_EXTRACT (maintenance root cause + parts mentioned). Gold layer — AI_SUMMARIZE (maintenance summaries), AI_CLASSIFY (inventory risk level).
+Streamlit Dashboard (Phase 7): 5 pages deployed as SiS — Operations Overview, Fleet Health, Route Performance, Maintenance & Parts, Customer Insights. Features: date range filter, depot/zone selector, KPI cards with sparklines, AI-generated daily summary, data freshness indicator.
+Validation (Phase 8): Data flow (raw → stream → dbt → gold), AI output spot-checks, RBAC permission tests, dashboard rendering.
+Give me the detailed 8-phase implementation plan with all steps, then execute it phase by phase.
